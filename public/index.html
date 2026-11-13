@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="google" content="notranslate">
+<title>Luca Putaro | A shared board that merges offline edits</title>
+<meta name="description" content="Two boards, one shared state. Take both offline, edit the same note on each, reconnect, and watch them arrive at the same result. The merge logic is a hand-written CRDT.">
+<link rel="preload" href="/fonts/bricolage.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="top">
+  <a class="who" href="/">Luca Putaro</a>
+  <nav><a href="#how">How it works</a></nav>
+</header>
+
+<main>
+<section class="hero">
+  <h1>Cut the connection. Keep editing.<br>Come back to the same board.</h1>
+  <p class="lede">A shared note board that keeps working without a network. Every open copy edits on its own, and once the copies can talk again they merge into the same result, with no server picking a winner. The merge logic is written from scratch, not imported.</p>
+</section>
+
+<nav class="line" id="steps" aria-label="Demo steps">
+  <ol>
+    <li data-step="1"><span class="stop"><span class="dot"></span>Take both offline</span></li>
+    <li data-step="2"><span class="stop"><span class="dot"></span>Edit the same note</span></li>
+    <li data-step="3"><span class="stop"><span class="dot"></span>Reconnect</span></li>
+    <li data-step="4"><span class="stop"><span class="dot"></span>Same result</span></li>
+  </ol>
+</nav>
+
+<section id="demo" class="stage">
+  <div class="stage-head" id="intro">
+    <h2>Two boards, one shared state</h2>
+    <p>These are two separate copies of one board, each with its own live connection, like two people on two laptops. Switch both to offline, type into the same note on each side, then switch them back on.</p>
+  </div>
+  <p class="caveat">Unsent changes live only in the open tab. If you close a tab while it is offline, its unsent changes are gone. The browser asks first.</p>
+  <div id="pair" class="pair" translate="no"></div>
+  <p id="verdict" class="verdict-line" aria-live="polite" translate="no"></p>
+
+  <div class="share">
+    <div>
+      <h3 id="share-title">Bring a real second device</h3>
+      <p id="share-text">Open this link on a phone or another computer. It joins the same board.</p>
+    </div>
+    <div class="share-row">
+      <input id="share-link" type="text" readonly aria-labelledby="share-title">
+      <button id="share-copy" type="button">Copy link</button>
+    </div>
+    <p class="hint"><span id="expiry">Boards expire 24 hours after they are created.</span> No account, no cookies. Please do not put personal data on a board. <a href="/">Start a fresh board</a></p>
+  </div>
+</section>
+
+<section id="how" class="rules">
+  <h2>How it works</h2>
+  <dl>
+    <div><dt>Text merges character by character.</dt><dd>Every character gets a permanent ID and remembers which character it was typed after. When two people type at the same spot, both words stay, whole and in the same order on every device. The technique is called RGA, a sequence CRDT.</dd></div>
+    <div><dt>Position and color: the last writer wins.</dt><dd>A note cannot sit in two places. Each move carries a logical timestamp, and every device keeps the one with the highest stamp. Same rule everywhere, so the same winner everywhere.</dd></div>
+    <div><dt>The server stores and forwards. It never decides.</dt><dd>A Cloudflare Durable Object keeps an append-only log per board and relays it over WebSockets. Order of arrival does not matter, duplicates do not matter. The data structure does the merging, not the server.</dd></div>
+    <div><dt>Tested with random chaos, not just examples.</dt><dd>The test suite plays 2,000 random schedules against the merge logic and 400 more through the sync layer: changes out of order, twice, late, with dropped connections. All copies must end up identical, and no typed character may go missing unless someone deleted it. The random seed is fixed, so any failure can be replayed.</dd></div>
+    <div><dt>Hard limits against abuse.</dt><dd>A board expires after 24 hours. It holds at most 24 notes, and every note has a size cap. If two copies go over a limit together while offline, the server refuses the later one. That copy says how many changes it discarded, shows its text for copying, and reloads from the server. Nothing is stored in your browser. There are no accounts and no cookies.</dd></div>
+    <div><dt>What it does not do.</dt><dd>Deleting a note beats edits made to it at the same time. Nothing is saved in your browser, so closing the tab while offline drops unsent changes. The page warns you first. Going over a limit offline discards the later copy's changes, as described above. These are deliberate trade-offs for a demo this size.</dd></div>
+  </dl>
+</section>
+</main>
+
+<footer>
+  <p>Built by Luca Putaro on Cloudflare Workers and Durable Objects. No cookies, no tracking.</p>
+  <p><a href="#how">How it works</a> · <a href="/imprint.html">Impressum</a> · <a href="/privacy.html">Datenschutz</a></p>
+</footer>
+<script type="module" src="/app.js"></script>
+</body>
+</html>

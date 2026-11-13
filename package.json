@@ -1,0 +1,22 @@
+{
+  "name": "sync-board",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:client": "esbuild src/client/main.ts --bundle --format=esm --target=es2022 --minify --outfile=public/app.js",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test:run": "vitest run",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.client.json",
+    "lint": "eslint src test"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261112.1",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.14.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.2",
+    "vitest": "^5.1.0",
+    "wrangler": "^4.160.1"
+  }
+}

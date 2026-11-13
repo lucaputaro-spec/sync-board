@@ -1,0 +1,28 @@
+{
+  // Workers Free, geprüft am 12.11.2026 in der Cloudflare-Doku
+  // (durable-objects/platform/pricing): Durable Objects mit SQLite-Speicher
+  // sind im Gratis-Tarif enthalten. Je Tag 100.000 Anfragen, 13.000 GB-s
+  // Laufzeit, 100.000 geschriebene Zeilen, 5 GB Speicher gesamt. Beim
+  // Überschreiten gibt es Fehler, keine Rechnung.
+  "name": "sync-board",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true,
+  // Die Seite braucht den CRDT-Kern im Browser, deshalb ein Bündel-Schritt.
+  "build": { "command": "npm run build:client", "watch_dir": "src" },
+  "assets": {
+    "directory": "./public",
+    "run_worker_first": ["/api/*"]
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "ROOMS", "class_name": "Room" }]
+  },
+  // new_sqlite_classes ist Pflicht: nur diese Sorte gibt es im Gratis-Tarif.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }],
+  // Bremse: 30 neue Verbindungen pro Minute je Besucher. Cloudflare zählt nur
+  // ungefähr. Die harte Grenze sind die Tageskontingente oben.
+  "ratelimits": [
+    { "name": "LIMITER", "namespace_id": "4712", "simple": { "limit": 30, "period": 60 } }
+  ],
+  "observability": { "enabled": false }
+}
